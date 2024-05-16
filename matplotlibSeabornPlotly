@@ -1,3 +1,65 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+df=pd.read_csv('C:\sachinp\SachinP\AI-ML\Projects\P3\AusApparalSales4thQrt2020_2.csv')
+df.columns = df.columns.str.strip()
+df['Date']=pd.to_datetime(df['Date'])
+
+# df.head(10)
+# df1= df.groupby(['Date'])['Sales'].sum()
+# print (df1)
+
+# Histogram- Matplotb]lib -To display frequency of slaes figures as a graph as 37500 3 times
+# plt.hist(df['Sales'], color='purple', alpha=0.7)
+# plt.show()
+
+# Bar- Matplotb]lib- To display bar chart  of datewise sales
+# plt.bar(df['Date'],df['Sales'], color='purple', label='DatewiseSales')
+# plt.xlabel('date')
+# plt.ylabel('sales')
+# plt.legend()
+# plt.xticks(rotation=75)
+# plt.show()
+
+# Line- Matplotb]lib-To diplay line chart datewise sales
+# plt.plot(df['Date'],df['Sales'] ,color='purple', label='DatewiseSales')
+# plt.xticks(rotation=75)
+# plt.show()
+
+# histogram -seaborn- -To display frequency of slaes figures as a graph as 37500 3 times
+# sns.histplot(df['Sales'] ,bins=10, color='purple', label='DatewiseSales')
+# sns.show()
+
+# Bar- seaborn- To display bar chart  of datewise sales
+# sns.barplot(x='Date',y='Sales', data=df, color='green', label='DatewiseSales')
+# sns.show()
+
+# Line- seaborn- To display bar chart  of datewise sales
+# sns.barplot(x='Date',y='Sales', data=df, color='green', label='DatewiseSales')
+# plt.show()
+
+# # Plotly Bar chart
+# fig=px.bar(df, x='Date', y='Sales', title='Date wise Sales Chart')
+# fig.show()
+
+# Plotly scatter chart
+# fig=px.scatter_3d(df, x='Date', y='Sales',z='Unit', title='Date wise Sales Chart')
+# fig.show()
+
+# Plotly line chart
+# fig=px.line(df, x='Date', y=['Sales23','Sales24'], title='Date wise Sales Chart')
+# fig.show()
+
+#  Heatmap  
+# plt.imshow(df,cmap='sales')
+# # plt.colorbar()
+# plt.show()
+
+
+
+-------------------------------------------------------------
+
 import plotly.express as px
 import seaborn as sb
 # sb.get_dataset_names() - get datasetname seaborn
