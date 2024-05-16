@@ -13,3 +13,41 @@ fig.show()
 
 fig = px.box(data, x="month", y="passengers", points="all", color="month")
 fig.show()
+
+
+# Room 5 
+# Example 1
+import matplotlib as plt
+import seaborn as sns
+data = sns.load_dataset("tips")
+# plt.show()
+print(data.describe())
+plt.boxplot(data['tip'] )
+plt.show()
+# ------------
+# Room 5 
+# Example 2
+from statsmodels.stats.stattools import medcouple
+data.columns
+# positive
+# skew_data = np.array(data)
+skewness = medcouple(data['total_bill'])
+
+print(data['total_bill'].describe())
+
+print(skewness)
+
+
+room :-1
+import seaborn as sns
+
+data = sns.load_dataset('tips')
+data.head()
+data.corr()
+data.describe()
+import matplotlib.pyplot as mtp
+mtp.boxplot(data['total_bill'])
+import plotly.graph_objects as go
+fig = go.Figure()
+fig.add_trace(go.Bar(y=data["total_bill"], x=data["sex"],color=))
+fig.show()
