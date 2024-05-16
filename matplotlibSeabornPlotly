@@ -1,0 +1,15 @@
+import plotly.express as px
+import seaborn as sb
+# sb.get_dataset_names() - get datasetname seaborn
+data=sb.load_dataset('flights')
+#data.describe()
+
+fig = px.box(data["passengers"], notched=True)
+# fig = px.box(data, y="passengers", notched=True)
+fig.show()
+
+fig = px.box(data, x="year", y="passengers", points="all")
+fig.show()
+
+fig = px.box(data, x="month", y="passengers", points="all", color="month")
+fig.show()
