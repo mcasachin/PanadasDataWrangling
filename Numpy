@@ -1,1 +1,16 @@
 
+# https://numpy.org/doc/stable/user/quickstart.html.
+import numpy as np
+# a=np.array([1,2,3,4,5,6,7,8,9])
+# print(a)
+# a=a.reshape(3,3)
+# print(a)
+
+1, create a two 2 d matrix 
+2, per arithmetic oper - ad, sub , mul , divi, matrix
+3, index and slice get the last element
+
+1, create a two 2 d matrix 
+2, per arithmetic oper - ad, sub , mul , divi, matrix
+3, index and slice get the last element
+
