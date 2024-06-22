@@ -1,1 +1,222 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import scipy.stats as stats
+import pandas as pd
+from datetime import datetime
+from scipy.stats import pearsonr
+import statsmodels.api as sm
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+
+# Importing the Datafile
+df=pd.read_csv('D:\AIML\SimpliProjects\M3-PythonandDataScience\P3.2MarketCampaning\marketing_data.csv')
+
+# Once data is imported, investigate variables like Dt_Customer and Income, etc., and check if they are imported correctly.
+# Change Dt_Customer to date and replace currency symbols from income columns 
+df.columns = df.columns.str.strip()
+df['Dt_Customer']=pd.to_datetime(df['Dt_Customer'])
+df['Income']=df['Income'].str.replace('$','')
+df['Income']=df['Income'].str.replace(',','')
+
+# Income values for a few customers are missing. Perform missing value imputation. Assume that the customers with similar education and marital status make the same yearly income, on average. You may have to clean the data before performing this. For data cleaning, look into the categories of education and marital status. 
+# Take mean of income on Education and Marital_Status and fill the missing values
+df['Income'].fillna(-1,inplace=True)
+df['Income'] = df['Income'].astype(float)
+df1=df.groupby(['Education','Marital_Status'])[['Income']].mean() 
+merged_df = pd.merge(df, df1, on = ['Education','Marital_Status'])
+# print(merged_df['Income_x'].isnull().sum())
+merged_df.loc[merged_df["Income_x"] == -1, "Income_x"] = merged_df["Income_y"]
+merged_df=merged_df.drop(['Income_y'], axis=1)
+
+# Create variables to populate the total number of children, age, and total spending. 
+# Hint: From the number of purchases through the three channels, people can derive the total purchases.
+merged_df['TotalChildren'] =merged_df['Kidhome'] +merged_df['Teenhome']
+merged_df['TotalPurchase']=merged_df['NumWebVisitsMonth'] +merged_df['NumStorePurchases']+merged_df['NumCatalogPurchases']
+
+# # Box plot and histogram to understand the outliers  - Year_Birth
+print('Box plot and histogram to undestand outliers of Year_Birth Column')
+fig = px.box(merged_df,  y="Year_Birth")
+fig.show()
+fig=px.histogram(merged_df, x='Year_Birth')
+fig.show()
+print('Box plot and histogram after removing outliers from Year_Birth Column')
+merged_df_1 = merged_df[merged_df['Year_Birth'] >= 1940]
+fig = px.box(merged_df_1,  y="Year_Birth")
+fig.show()
+fig=px.histogram(merged_df_1, x='Year_Birth')
+fig.show()
+
+# # Box plot and histogram to understand the outliers  -  Income
+print('Box plot and histogram to undestand outliers of Income Column')
+fig = px.box(merged_df_1,  y="Income_x")
+fig.show()
+fig=px.histogram(merged_df_1, x='Income_x')
+fig.show()
+print('Box plot and histogram after removing outliers from Income Column')
+merged_df_2 = merged_df_1[merged_df_1['Income_x'] <= 113734]
+fig = px.box(merged_df_2,  y="Income_x")
+fig.show()
+fig=px.histogram(merged_df_2, x='Income_x')
+fig.show()
+
+# Use ordinal encoding and one hot encoding according to different types of categorical variables.
+# Create an ordinal encoder, # Fit the encoder to the data (learn the order) and # Transform the data (convert categories to numbers)
+ordinal_encoder = OrdinalEncoder()
+ordinal_encoder.fit(merged_df[['Marital_Status']])
+merged_df['marital_status_ordinal'] = ordinal_encoder.transform(merged_df[['Marital_Status']])
+
+# Using hot encoding on Eductaion column, It will add disctinct education column with value as Education_2n Cycle, Education_Basi, Education_Graduation, Education_Master, Education_PhD
+one_hot_encoder = OneHotEncoder(sparse=False)
+marital_status_one_hot = one_hot_encoder.fit_transform(merged_df[['Education']])
+marital_status_one_hot_df = pd.DataFrame(
+    marital_status_one_hot, 
+    columns=one_hot_encoder.get_feature_names_out(['Education'])
+)
+merged_df_3=pd.concat([merged_df, marital_status_one_hot_df], axis=1)
+
+# Create a heatmap to showcase the correlation between different pairs of variables.
+# heatmap to showcase the correlation between Marital_Status & Income 
+print('Heatmap to showcase correlation between Income and Marital Status')
+correlation_matrix = merged_df_3[['Income_x', 'marital_status_ordinal']].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation between Income and Marital Status')
+plt.show()
+
+
+# ⦁	Test the following hypotheses:
+# ⦁	Older people are not as tech-savvy and probably prefer shopping in-store.
+# ⦁	Customers with kids probably have less time to visit a store and would prefer to shop online.
+# ⦁	Other distribution channels may cannibalize sales at the store.
+# ⦁	Does the US fare significantly better than the rest of the world in terms of total purchases?
+
+# Older people are not as tech-savvy and probably prefer shopping in-store.'
+# Null Hypothesis - There are no differences in website visits among age groups.(younger than30, 30-50 , olderthan50)
+# Alternative Hypothesis - There are differences in website visits among age groups.(younger than30, 30-50 , olderthan50)
+print(f"Test of hypotheses - ")
+
+merged_df_3['AgeGroup'] = pd.cut(merged_df_3['Year_Birth'].max()-merged_df_3['Year_Birth'], bins=[0, 20, 50, 100], labels=['Younger than 30', '30-50', 'Older than 50'], right=True)
+merged_df_3['WebsiteVisitCategory'] = pd.cut(merged_df_3['NumWebVisitsMonth'], bins=[0, 5, 10, 15,20], labels=['0-5', '6-10','11-15','16+' ], right=True)
+contingency_table_website = pd.crosstab(merged_df_3['AgeGroup'], merged_df_3['WebsiteVisitCategory'])
+# Chi-Square Test for website visits
+chi2_website, p_website, dof_website, expected_website = stats.chi2_contingency(contingency_table_website)
+
+print("\n1. Older people are not as tech-savvy and probably prefer shopping in-store.")
+print(f"Chi-Square test on Age group and Website Visits to identify, if There are no differences in website visits among age groups.")
+print(f"P-Value for Website Visits: {p_website}")
+print('p-value is ',p_website,'less than the significance level (commonly 0.05), you reject the null hypothesis. This means there is a significant association between the age category and the number of website visits')
+
+# Customers with kids probably have less time to visit a store and would prefer to shop online.
+corr_store_visits, p_store_visits = pearsonr(merged_df_3['Kidhome'], merged_df_3['NumStorePurchases'])
+corr_website_visits, p_website_visits = pearsonr(merged_df_3['Kidhome'], merged_df_3['NumWebVisitsMonth'])
+print('\n2. Customers with kids probably have less time to visit a store and would prefer to shop online.')
+print('A negative correlation' ,corr_store_visits, 'and p-value:',p_store_visits,' between the number of kids and store visits would support the hypothesis that more kids at home lead to fewer store visits.')
+print('A Positive correlation' ,corr_website_visits, 'and p-value:',p_website_visits,' between the number of kids and website visits would support the hypothesis that more kids at home lead to more website visits.')
+
+# Other distribution channels may cannibalize sales at the store.
+# Calculate the correlation coefficients between store purchases and web/catalog purchases to see if there is a linear relationship.
+# Hypothesis:
+# Null hypothesis (𝐻0): There is no correlation between store purchases and web/catalog purchases.
+# Alternative hypothesis (𝐻1): There is a correlation between store purchases and web/catalog purchases.
+data = pd.DataFrame({
+    'NumWebPurchases': merged_df['NumWebPurchases'],
+    'NumStorePurchases': merged_df['NumStorePurchases'],
+    'NumCatalogPurchases': merged_df['NumCatalogPurchases']
+})
+correlation_matrix = data.corr()
+# Hypothesis testing for correlation
+corr_store_web, p_value_store_web = stats.pearsonr(data['NumStorePurchases'], data['NumWebPurchases'])
+corr_store_catalog, p_value_store_catalog = stats.pearsonr(data['NumStorePurchases'], data['NumCatalogPurchases'])
+print(f'\n3. Other distribution channels may cannibalize sales at the store.')
+print(f'Correlation between Store and Web Purchases: {corr_store_web}, so Medium correlation between Store and Web Purchases')
+print(f'Correlation between Store and Catalog Purchases: {corr_store_catalog} so low correlation between Store and Catalog Purchases')
+
+# Does the US fare significantly better than the rest of the world in terms of total purchases?
+# Null hypothesis (𝐻0 ): There is no significant difference in total purchases between the US and the rest of the world
+# Alternative hypothesis (H1): There is a significant difference in total purchases between the US and the rest of the world
+merged_df_3['TotalPurchase'].fillna(0,inplace=True)
+merged_df_3['TotalPurchase'] = merged_df_3['TotalPurchase'].astype(int)
+us_data = merged_df_3[merged_df_3['Country'] == 'US']['TotalPurchase']
+rest_of_world_data = merged_df_3[merged_df_3['Country'] != 'US']['TotalPurchase']
+# # Perform the two-sample t-test
+t_stat, p_value = stats.ttest_ind(us_data, rest_of_world_data)
+print(f"\n4. Does the US fare significantly better than the rest of the world in terms of total purchases?" )
+print(f" Here p-value: {p_value} is less than 0.05 so accpeting null hypothesis and There is no significant difference in total purchases between the US and the rest of the world" )
+
+# •	Use appropriate visualization to help analyze the following:
+# o	Which products are performing the best, and which are performing the least in terms of revenue?
+# o	Is there any pattern between the age of customers and the last campaign acceptance rate?
+# o	Which Country has the greatest number of customers who accepted the last campaign?
+# o	Do you see any pattern in the no. of children at home and total spend?
+# o	Education background of the customers who complained in the last 2 years.
+
+print(f"\nVisualization charts/Graphs to help analyze the following" )
+
+# Which products are performing the best, and which are performing the least in terms of revenue?
+print(f"\n1. Which products are performing the best, and which are performing the least in terms of revenue?" )
+print(f"\n MntWines are performing the best, and MntFruits are performing the least in terms of revenue?" )
+data = pd.DataFrame({
+    'MntWines': merged_df_3['MntWines'],
+    'MntFruits': merged_df_3['MntFruits'],
+    'MntMeatProducts': merged_df_3['MntMeatProducts'],
+    'MntFishProducts': merged_df_3['MntFishProducts'],
+    'MntSweetProducts': merged_df_3['MntSweetProducts'],
+    'MntGoldProds': merged_df_3['MntGoldProds']
+   
+})
+# Calculate total revenue for each product and craete bar chart
+total_revenue = data.sum()
+plt.figure(figsize=(10, 6))
+total_revenue.plot(kind='bar', color=['blue', 'orange', 'green', 'red','yellow','brown'])
+plt.title('Total Revenue by Product')
+plt.xlabel('Product')
+plt.ylabel('Total Revenue')
+plt.xticks(rotation=0)
+plt.show()
+
+print(f"\n2. Is there any pattern between the age of customers and the last campaign acceptance rate?" )
+# Is there any pattern between the age of customers and the last campaign acceptance rate?
+# AcceptedCmp5 # Age
+merged_df_3['Age'] = 1996-merged_df_3['Year_Birth']
+plt.figure(figsize=(10, 6))
+sns.violinplot(x='AcceptedCmp5', y='Age', data=merged_df_3)
+plt.title('Violin Plot of Age by Campaign Acceptance')
+plt.xlabel('Campaign Accepted (0 = No, 1 = Yes)')
+plt.ylabel('Age')
+plt.show()
+
+# Which Country has the greatest number of customers who accepted the last campaign?
+print(f"\n3. Which Country has the greatest number of customers who accepted the last campaign?" )
+print(f"\ SP Country has the greatest number of customers who accepted the last campaign." )
+# merged_df_3['Country']# AcceptedCmp5
+AcceptedCmp5data=merged_df_3.groupby(['Country'])[['AcceptedCmp5']].sum() 
+plt.figure(figsize=(10, 6))
+AcceptedCmp5data.plot(kind='bar', color='skyblue')
+plt.title('Number of Customers Who Accepted the Last Campaign by Country')
+plt.xlabel('Country')
+plt.ylabel('Number of Accepted Campaigns')
+plt.xticks(rotation=45)
+plt.show()
+
+# Do you see any pattern in the no. of children at home and total spend?
+print(f"\n4. Do you see any pattern in the no. of children at home and total spend?" )
+print(f" Yes, The pattern is when No. of childrens are growing expenses are becoming less." )
+total_spend = merged_df_3.groupby('Kidhome')['TotalPurchase'].sum().reset_index()
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Kidhome', y='TotalPurchase', data=total_spend, palette='viridis')
+plt.title('Average Total Spend by Number of Children at Home')
+plt.xlabel('Number of Children at Home')
+plt.ylabel('Average Total Spend')
+plt.show()
+
+# Education background of the customers who complained in the last 2 years.
+print(f"\n5. Education background of the customers who complained in the last 2 years." )
+print(f" Gradualte customers complained most in the last 2 years." )
+education_complaints =  merged_df_3.groupby('Education')['Complain'].sum()
+plt.figure(figsize=(8, 8))
+education_complaints.plot(kind='pie', autopct='%1.1f%%', startangle=140, colors=sns.color_palette('pastel'))
+plt.title('Proportion of Complaints by Education Level')
+plt.ylabel('')
+plt.show()
 
