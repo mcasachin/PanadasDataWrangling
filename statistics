@@ -1,1 +1,32 @@
+from scipy.stats import ttest_1samp
+import pandas as pd
 
+import scipy.stats as stats
+
+p = 0.7
+
+out = stats.bernoulli(p)
+
+p1 = out.pmf(0)
+p2 = out.pmf(1)
+
+print(round(p1,2),round(p2,2))
+
+# Load dataset
+# ages = pd.read_csv("Ages.csv")
+ages=pd.read_csv("C:\Users\Sachin\MyJupiterNotebookCodeSelfLearning\Ages.csv")
+# Assuming 'age' is the column of interest
+age_column = ages['age']  # Replace 'age' with the actual column name
+mean_age = age_column.mean()
+print(f"Mean age: {mean_age}")
+
+# Perform one-sample t-test
+t_statistic, p_value = ttest_1samp(age_column, 30)
+print(f"p-value: {p_value}")
+
+# Decision making
+alpha = 0.05
+if p_value < alpha:
+    print("Reject the null hypothesis.")
+else:
+    print("Fail to reject the null hypothesis.")
