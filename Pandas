@@ -1,1 +1,59 @@
 
+import pandas as pd
+#create a series from dictionary
+sample_dict = {"a":1 , "b" : 2 , "c" : 3 , "d" : 4}
+series = pd.Series(sample_dict)
+print(series)
+
+
+
+# 1. Create a Pandas Series for sales data
+# - Use a list of daily sales figures to create a Pandas Series
+# - Assign days of the week as the index
+# 2. Access and manipulate sales data
+# - Access sales data for specific days using index labels
+# - Calculate total sales for the week
+# - Identify the day with the highest and lowest sales
+   
+# 3. Basic analysis of sales data
+# - Calculate the average sales for the week
+# - Determine any days with sales figures significantly different from the average
+
+sales_data = [120, 150, 130, 170, 160, 180, 140]
+days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+# 1
+salesSeries=pd.Series(sales_data, index=days_of_week)
+salesSeries
+# 2
+salesSeries['Saturday']=100
+print(salesSeries['Saturday'])
+print('Sum of Week sales is', salesSeries.sum())
+print('highest sales amountis' , salesSeries.max())
+maxsale=salesSeries[(salesSeries ==salesSeries.max()) ]
+print('day with the highest sales',maxsale)
+minsale=salesSeries[(salesSeries ==salesSeries.min()) ]
+print('day with the lowest sales',minsale)
+# 3. Basic analysis of sales data
+print('Avg sale of Week  is', salesSeries.mean())
+# - Determine any days with sales figures significantly different from the average
+
+import pandas as pd
+# print(pd.__version__)
+df=pd.read_csv("D:\AIML\SimpliProjects\M3-PythonandDataScience\SelfLearning\HousePrices.csv")
+df.columns
+df.set_index(['date'],inplace=True)
+df.reset_index(inplace=True)
+df.head()
+# df=pd.read_csv("D:\AIML\SimpliProjects\M3-PythonandDataScience\SelfLearning\HousePrices.csv").query('city == "Auburn"')
+# df.to_csv('D:\AIML\SimpliProjects\M3-PythonandDataScience\SelfLearning\Auburn.csv')
+# df.head()
+# df.size
+# df.memory_usage()
+# df.head()
+# df.groupby(['city']).max()
+# df.plot()
+# df['bedrooms'].plot()
+# df['bedrooms']=df['bedrooms'].astype('int32')
+
+
